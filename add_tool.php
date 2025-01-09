@@ -7,20 +7,25 @@ if (!isset($_SESSION['user_id'])) {
 
 include 'config.php';
 
-// Menambahkan alat kalibrasi ke database
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = $_POST['name'];
-    $status = $_POST['status'];
-    $last_calibration = $_POST['last_calibration'];
+// Proses penyimpanan data
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $tool_name = trim($_POST['tool_name']);
+    $calibration_status = trim($_POST['calibration_status']);
+    $last_calibrated = trim($_POST['last_calibrated']);
 
-    $sql_insert = "INSERT INTO calibration_tools (name, status, last_calibration) 
-                   VALUES ('$name', '$status', '$last_calibration')";
+    if (!empty($tool_name) && !empty($calibration_status) && !empty($last_calibrated)) {
+        $stmt = $conn->prepare("INSERT INTO calibration_tools (tool_name, calibration_status, last_calibrated) VALUES (?, ?, ?)");
+        $stmt->bind_param("sss", $tool_name, $calibration_status, $last_calibrated);
 
-    if ($conn->query($sql_insert) === TRUE) {
-        header("Location: calibration.php"); // Redirect setelah berhasil menambahkan alat
-        exit();
+        if ($stmt->execute()) {
+            header("Location: calibration.php?success=Alat berhasil ditambahkan");
+            exit();
+        } else {
+            $error_message = "Gagal menambahkan alat. Silakan coba lagi.";
+        }
+        $stmt->close();
     } else {
-        echo "Error: " . $sql_insert . "<br>" . $conn->error;
+        $error_message = "Semua field harus diisi.";
     }
 }
 ?>
@@ -32,72 +37,82 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tambah Alat Kalibrasi</title>
     <style>
-        /* Gaya CSS untuk form */
         body {
             font-family: Arial, sans-serif;
             background-color: #f7f3f2;
-        }
-
-        .container {
             padding: 20px;
         }
-
-        h2 {
-            color: #800000;
+        form {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffe4e1;
+            border: 1px solid #cd5c5c;
+            border-radius: 10px;
         }
-
         label {
             font-weight: bold;
-            margin-bottom: 5px;
             display: block;
+            margin-bottom: 15px;
         }
-
-        input[type="text"], input[type="date"], select {
+        input[type="text"],
+        input[type="date"],
+        select {
             width: 100%;
-            padding: 10px;
-            margin: 5px 0 20px;
+            padding: 8px;
+            margin-bottom: 15px;
             border: 1px solid #ddd;
             border-radius: 5px;
-            font-size: 14px;
         }
-
-        select {
-            cursor: pointer;
-        }
-
-        .btn-submit {
-            display: inline-block;
-            padding: 10px 20px;
+        button {
             background-color: #800000;
             color: white;
-            text-decoration: none;
+            padding: 10px 15px;
+            border: none;
             border-radius: 5px;
-            font-size: 16px;
+            cursor: pointer;
         }
-
-        .btn-submit:hover {
+        button:hover {
+            background-color: #a52a2a;
+        }
+        .error {
+            color: red;
+            margin-bottom: 15px;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            text-decoration: none;
+            background-color: #800000;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+        .back-btn:hover {
             background-color: #a52a2a;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Tambah Alat Kalibrasi</h2>
-        <form action="add_tool.php" method="POST">
-            <label for="name">Nama Alat:</label>
-            <input type="text" name="name" required><br><br>
+    <a href="calibration.php" class="back-btn">Kembali</a>
+    <h1>Tambah Alat Kalibrasi</h1>
+    <?php if (isset($error_message)): ?>
+        <p class="error"><?php echo htmlspecialchars($error_message); ?></p>
+    <?php endif; ?>
+    <form method="POST" action="">
+        <label for="tool_name">Nama Alat:</label>
+        <input type="text" id="tool_name" name="tool_name" required>
 
-            <label for="status">Status:</label>
-            <select name="status" required>
-                <option value="Terkalibrasi">Terkalibrasi</option>
-                <option value="Butuh Kalibrasi">Butuh kalibrasi</option>
-            </select><br><br>
+        <label for="calibration_status">Status Kalibrasi:</label>
+        <select id="calibration_status" name="calibration_status" required>
+            <option value="Terkalibrasi">Terkalibrasi</option>
+            <option value="Belum Terkalibrasi">Belum Terkalibrasi</option>
+        </select>
 
-            <label for="last_calibration">Kalibrasi Terakhir:</label>
-            <input type="date" name="last_calibration" required><br><br>
+        <label for="last_calibrated">Tanggal Kalibrasi Terakhir:</label>
+        <input type="date" id="last_calibrated" name="last_calibrated" required>
 
-            <button type="submit" class="btn-submit">Tambah Alat</button>
-        </form>
-    </div>
+        <button type="submit">Simpan</button>
+    </form>
 </body>
 </html>

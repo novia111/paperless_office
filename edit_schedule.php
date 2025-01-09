@@ -1,52 +1,47 @@
 <?php
 session_start();
-include 'config.php';
-
-// Periksa apakah pengguna login
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
-// Periksa apakah ID ada di URL
-if (!isset($_GET['id'])) {
-    header("Location: schedule.php");
-    exit();
+include 'config.php';
+
+// Variabel untuk menyimpan data yang diedit
+$schedule_id = null;
+$tool_name = "";
+$client_name = "";
+$schedule_date = "";
+$status = "";
+
+// Proses Edit Jadwal
+if (isset($_GET['id'])) {
+    $schedule_id = $_GET['id'];
+
+    // Mengambil data jadwal berdasarkan id
+    $stmt = $conn->prepare("SELECT id, tool_name, client_name, schedule_date, status FROM schedules WHERE id = ?");
+    $stmt->bind_param("i", $schedule_id);
+    $stmt->execute();
+    $stmt->bind_result($schedule_id, $tool_name, $client_name, $schedule_date, $status);
+    $stmt->fetch();
+    $stmt->close();
 }
 
-$id = intval($_GET['id']);
-
-// Ambil data jadwal berdasarkan ID
-$query = "SELECT * FROM schedules WHERE id = ?";
-$stmt = $conn->prepare($query);
-$stmt->bind_param("i", $id);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result->num_rows === 0) {
-    header("Location: schedule.php");
-    exit();
-}
-
-$row = $result->fetch_assoc();
-
-// Update data jadwal jika form disubmit
+// Proses Update Jadwal
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $tool_name = htmlspecialchars($_POST['tool_name']);
-    $client_name = htmlspecialchars($_POST['client_name']);
-    $schedule_date = htmlspecialchars($_POST['schedule_date']);
-    $status = htmlspecialchars($_POST['status']);
+    $tool_name = $_POST['tool_name'];
+    $client_name = $_POST['client_name'];
+    $schedule_date = $_POST['schedule_date'];
+    $status = $_POST['status'];
 
-    $update_query = "UPDATE schedules SET tool_name = ?, client_name = ?, schedule_date = ?, status = ? WHERE id = ?";
-    $update_stmt = $conn->prepare($update_query);
-    $update_stmt->bind_param("ssssi", $tool_name, $client_name, $schedule_date, $status, $id);
+    // Update data jadwal
+    $stmt = $conn->prepare("UPDATE schedules SET tool_name = ?, client_name = ?, schedule_date = ?, status = ? WHERE id = ?");
+    $stmt->bind_param("ssssi", $tool_name, $client_name, $schedule_date, $status, $schedule_id);
+    $stmt->execute();
+    $stmt->close();
 
-    if ($update_stmt->execute()) {
-        header("Location: schedule.php");
-        exit();
-    } else {
-        $error = "Terjadi kesalahan saat memperbarui jadwal. Coba lagi.";
-    }
+    header("Location: schedule.php");
+    exit();
 }
 ?>
 
@@ -55,97 +50,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Jadwal</title>
+    <title>Edit Jadwal Kalibrasi</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f7f3f2;
-            margin: 0;
-            padding: 0;
-            color: #333;
+            padding: 20px;
         }
-        header, nav, footer {
-            background-color: #800000;
-            color: white;
-            padding: 10px 20px;
+        .form-container {
+            margin: auto;
+            max-width: 600px;
+            background-color: #ffe4e1;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .form-container h2 {
             text-align: center;
         }
-        nav a {
-            margin: 0 10px;
-            color: white;
-            text-decoration: none;
+        .input-field {
+            margin-bottom: 15px;
+            width: 100%;
         }
-        nav a:hover {
-            text-decoration: underline;
-        }
-        .container {
-            padding: 20px;
-        }
-        form {
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        form input, form select, form button {
+        .input-field input,
+        .input-field select {
             width: 100%;
             padding: 10px;
-            margin: 10px 0;
-            font-size: 1rem;
-            border: 1px solid #ddd;
+            border: 1px solid #ccc;
             border-radius: 5px;
         }
-        form button {
+        .submit-button {
+            display: block;
+            width: 100%;
+            padding: 10px 15px;
             background-color: #800000;
             color: white;
             border: none;
-            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
         }
-        form button:hover {
-            background-color: #a00000;
-        }
-        .error {
-            color: red;
-            margin-bottom: 10px;
+        .submit-button:hover {
+            background-color: #a52a2a;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Edit Jadwal Kalibrasi</h1>
-    </header>
-    <nav>
-        <a href="dashboard.php">Dashboard</a>
-        <a href="schedule.php">Kembali ke Jadwal</a>
-    </nav>
-    <div class="container">
-        <h2>Edit Jadwal</h2>
-        
-        <!-- Tampilkan pesan error jika ada -->
-        <?php if (isset($error)) echo "<p class='error'>$error</p>"; ?>
-
-        <!-- Form Edit Jadwal -->
-        <form method="POST" action="">
-            <label for="tool_name">Nama Alat</label>
-            <input type="text" id="tool_name" name="tool_name" value="<?php echo $row['tool_name']; ?>" required>
-
-            <label for="client_name">Nama Klien</label>
-            <input type="text" id="client_name" name="client_name" value="<?php echo $row['client_name']; ?>" required>
-
-            <label for="calibration_date">Tanggal Kalibrasi</label>
-            <input type="date" id="schedule_date" name="schedule_date" value="<?php echo $row['schedule_date']; ?>" required>
-
-            <label for="status">Status</label>
-            <select id="status" name="status" required>
-                <option value="Scheduled" <?php echo $row['status'] === 'Scheduled' ? 'selected' : ''; ?>>Scheduled</option>
-                <option value="Completed" <?php echo $row['status'] === 'Completed' ? 'selected' : ''; ?>>Completed</option>
-            </select>
-
-            <button type="submit">Simpan Perubahan</button>
+    <div class="form-container">
+        <h2>Edit Jadwal Kalibrasi</h2>
+        <form method="POST">
+            <div class="input-field">
+                <label for="tool_name">Nama Alat</label>
+                <input type="text" id="tool_name" name="tool_name" value="<?php echo htmlspecialchars($tool_name); ?>" required>
+            </div>
+            <div class="input-field">
+                <label for="client_name">Nama Klien</label>
+                <input type="text" id="client_name" name="client_name" value="<?php echo htmlspecialchars($client_name); ?>" required>
+            </div>
+            <div class="input-field">
+                <label for="schedule_date">Tanggal Kalibrasi</label>
+                <input type="date" id="schedule_date" name="schedule_date" value="<?php echo htmlspecialchars($schedule_date); ?>" required>
+            </div>
+            <div class="input-field">
+                <label for="status">Status</label>
+                <select id="status" name="status" required>
+                <option value="Scheduled">Scheduled</option>
+                <option value="Completed">Completed</option>
+                </select>
+            </div>
+            <button type="submit" class="submit-button">Simpan Perubahan</button>
         </form>
     </div>
-    <footer>
-        <p>&copy; 2025 Novia Kalibrasi</p>
-    </footer>
 </body>
 </html>

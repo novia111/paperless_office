@@ -7,22 +7,29 @@ if (!isset($_SESSION['user_id'])) {
 
 include 'config.php';
 
-// Pastikan ada ID laporan yang diberikan
-if (isset($_GET['delete_id'])) {
-    $delete_id = $_GET['delete_id'];
+if (isset($_GET['id'])) {
+    $id = $_GET['id'];
+    
+    // Mengambil nama file laporan
+    $sql = "SELECT file_name FROM reports WHERE id = $id";
+    $result = $conn->query($sql);
+    $report = $result->fetch_assoc();
 
-    // Hapus laporan dari database
-    $delete_sql = "DELETE FROM reports WHERE id = $delete_id";
-    if ($conn->query($delete_sql) === TRUE) {
-        // Jika berhasil menghapus, alihkan kembali ke halaman laporan
-        header("Location: reports.php");
-        exit();
-    } else {
-        echo "<script>alert('Gagal menghapus laporan'); window.location.href='reports.php';</script>";
+    if ($report) {
+        // Menghapus file
+        $file_path = 'uploads/' . $report['file_name'];
+        if (file_exists($file_path)) {
+            unlink($file_path);
+        }
+
+        // Menghapus data laporan dari database
+        $sql = "DELETE FROM reports WHERE id = $id";
+        if ($conn->query($sql) === TRUE) {
+            header("Location: reports.php");
+            exit();
+        }
     }
-} else {
-    // Jika tidak ada ID yang diberikan
-    header("Location: reports.php");
-    exit();
 }
-?>
+
+header("Location: reports.php");
+exit();

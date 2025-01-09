@@ -7,16 +7,9 @@ if (!isset($_SESSION['user_id'])) {
 
 include 'config.php';
 
-// Ambil data alat kalibrasi dari database
-$sql = "SELECT * FROM calibration_tools";
-$result = $conn->query($sql);
-$calibration_tools = [];
-
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $calibration_tools[] = $row;
-    }
-}
+// Mengambil data alat kalibrasi
+$sql_tools = "SELECT id, tool_name, calibration_status, last_calibrated FROM calibration_tools";
+$result_tools = $conn->query($sql_tools);
 ?>
 
 <!DOCTYPE html>
@@ -26,7 +19,6 @@ if ($result->num_rows > 0) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alat Kalibrasi</title>
     <style>
-        /* Gaya dasar */
         body {
             font-family: Arial, sans-serif;
             background-color: #f7f3f2;
@@ -35,7 +27,6 @@ if ($result->num_rows > 0) {
             flex-direction: column;
             min-height: 100vh;
         }
-
         /* Header */
         header {
             background-color: #800000;
@@ -84,105 +75,51 @@ if ($result->num_rows > 0) {
             padding: 20px;
             flex: 1;
         }
-
-        /* Tombol */
-        .btn-add, .btn-back {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #800000;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            margin: 10px 0;
-            text-align: center;
-        }
-
-        .btn-add:hover, .btn-back:hover {
-            background-color: #a52a2a;
-        }
-
-        /* Tabel */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
-        }
-
-        table th, table td {
-            border: 1px solid #ddd;
-            padding: 10px;
+            margin: 20px auto;
             text-align: left;
         }
-
-        table th {
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        th {
             background-color: #800000;
             color: white;
         }
-
-        /* Tombol dalam tabel */
-        .btn-add, .btn-edit, .btn-delete {
+        .action-btn {
+            padding: 5px 10px;
+            text-decoration: none;
+            color: white;
+            background-color: #800000;
+            border-radius: 5px;
+            margin-right: 5px;
+        }
+        .action-btn:hover {
+            background-color: #a52a2a;
+        }
+        .add-btn {
             display: inline-block;
-            padding: 8px 15px;
+            width: fit-content;
+            padding: 10px 15px;
+            background-color: #800000;
+            color: white;
             text-decoration: none;
             border-radius: 5px;
-            margin: 5px 5px;
-        }
-
-        .btn-add {
-            background-color: #800000;
-            color: white;
-        }
-
-        .btn-add:hover {
-            background-color: #800000;
-        }
-
-        .btn-edit {
-            background-color: #800000;
-            color: white;
-        }
-
-        .btn-edit:hover {
-            background-color: #a52a2a;
-        }
-
-        .btn-delete {
-            background-color: #800000;
-            color: white;
-        }
-
-        .btn-delete:hover {
-            background-color: #d32f2f;
-        }
-
-        /* Tombol Kembali ke Dashboard */
-        .btn-back {
-            display: block;
+            margin: 20px 0;
             text-align: center;
-            margin: 30px auto;
-            width: 200px;
-            background-color: #800000;
-            color: white;
         }
 
-        .btn-back:hover {
+        .add-btn:hover {
             background-color: #a52a2a;
-        }
-
-        /* Footer */
-        footer {
-            background-color: #800000;
-            color: white;
-            text-align: center;
-            padding: 10px;
-            margin-top: auto; /* Push footer to the bottom */
         }
     </style>
 </head>
 <body>
     <header>
         <h1>Novia Kalibrasi</h1>
-        <!-- Dropdown button -->
         <div class="dropdown">
             &#x22EE; <!-- Unicode untuk titik tiga -->
             <div class="dropdown-content">
@@ -195,35 +132,39 @@ if ($result->num_rows > 0) {
             </div>
         </div>
     </header>
-    <div class="container">
-        <h2>Daftar Alat Kalibrasi</h2>
-        <a href="add_tool.php" class="btn-add">Tambah Alat</a>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nama Alat</th>
-                    <th>Status</th>
-                    <th>Kalibrasi Terakhir</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($calibration_tools as $tool): ?>
+
+    <a href="add_tool.php" class="add-btn">Tambah Alat Kalibrasi</a>
+
+    <table>
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Nama Alat</th>
+                <th>Status Kalibrasi</th>
+                <th>Terakhir Dikalibrasi</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if ($result_tools && $result_tools->num_rows > 0): ?>
+                <?php $no = 1; while ($row = $result_tools->fetch_assoc()): ?>
                     <tr>
-                        <td><?php echo $tool['id']; ?></td>
-                        <td><?php echo htmlspecialchars($tool['name']); ?></td>
-                        <td><?php echo htmlspecialchars($tool['status']); ?></td>
-                        <td><?php echo htmlspecialchars($tool['last_calibration']); ?></td>
+                        <td><?php echo $no++; ?></td>
+                        <td><?php echo htmlspecialchars($row['tool_name']); ?></td>
+                        <td><?php echo htmlspecialchars($row['calibration_status']); ?></td>
+                        <td><?php echo htmlspecialchars($row['last_calibrated']); ?></td>
                         <td>
-                            <a href="edit_tool.php?id=<?php echo $tool['id']; ?>" class="btn-edit">Edit</a>
-                            <a href="delete_tool.php?delete_id=<?php echo $tool['id']; ?>" class="btn-delete" onclick="return confirm('Hapus alat ini?');">Hapus</a>
+                            <a href="edit_tool.php?id=<?php echo $row['id']; ?>" class="action-btn">Edit</a>
+                            <a href="delete_tool.php?id=<?php echo $row['id']; ?>" class="action-btn" onclick="return confirm('Hapus alat ini?');">Hapus</a>
                         </td>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-        <a href="dashboard.php" class="btn-back">Kembali ke Dashboard</a>
-    </div>
+                <?php endwhile; ?>
+            <?php else: ?>
+                <tr>
+                    <td colspan="5" style="text-align: center;">Tidak ada data alat kalibrasi</td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
 </body>
 </html>

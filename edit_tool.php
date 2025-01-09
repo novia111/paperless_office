@@ -7,46 +7,46 @@ if (!isset($_SESSION['user_id'])) {
 
 include 'config.php';
 
-// Periksa apakah ada ID untuk diedit
-if (isset($_GET['id'])) {
-    $edit_id = intval($_GET['id']);
-
-    // Ambil data alat berdasarkan ID
-    $sql = "SELECT * FROM calibration_tools WHERE id = ?";
-    if ($stmt = $conn->prepare($sql)) {
-        $stmt->bind_param("i", $edit_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $tool = $result->fetch_assoc();
-        $stmt->close();
-    }
-
-    // Periksa apakah data ditemukan
-    if (!$tool) {
-        header("Location: calibration.php?error=Alat tidak ditemukan");
-        exit();
-    }
-} else {
-    header("Location: calibration.php?error=ID tidak valid");
+// Periksa apakah parameter `id` ada
+if (!isset($_GET['id'])) {
+    header("Location: calibration.php");
     exit();
 }
 
-// Update data alat jika form disubmit
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = $_POST['name'];
-    $status = $_POST['status'];
-    $last_calibration = $_POST['last_calibration'];
+$tool_id = $_GET['id'];
+$error = "";
 
-    $sql_update = "UPDATE calibration_tools SET name = ?, status = ?, last_calibration = ? WHERE id = ?";
-    if ($stmt = $conn->prepare($sql_update)) {
-        $stmt->bind_param("sssi", $name, $status, $last_calibration, $edit_id);
-        if ($stmt->execute()) {
-            header("Location: calibration.php?message=Data berhasil diperbarui");
+// Ambil data alat berdasarkan ID
+$sql = "SELECT * FROM calibration_tools WHERE id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $tool_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$tool = $result->fetch_assoc();
+
+if (!$tool) {
+    header("Location: calibration.php");
+    exit();
+}
+
+// Proses penyimpanan perubahan
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $tool_name = $_POST['tool_name'];
+    $calibration_status = $_POST['calibration_status'];
+    $last_calibrated = $_POST['last_calibrated'];
+
+    if (empty($tool_name) || empty($calibration_status) || empty($last_calibrated)) {
+        $error = "Semua kolom wajib diisi!";
+    } else {
+        $sql_update = "UPDATE calibration_tools SET tool_name = ?, calibration_status = ?, last_calibrated = ? WHERE id = ?";
+        $stmt_update = $conn->prepare($sql_update);
+        $stmt_update->bind_param("sssi", $tool_name, $calibration_status, $last_calibrated, $tool_id);
+        if ($stmt_update->execute()) {
+            header("Location: calibration.php");
             exit();
         } else {
-            echo "Error: " . $conn->error;
+            $error = "Gagal mengupdate data. Silakan coba lagi.";
         }
-        $stmt->close();
     }
 }
 ?>
@@ -61,58 +61,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         body {
             font-family: Arial, sans-serif;
             background-color: #f7f3f2;
-            margin: 0;
             padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #800000;
         }
         form {
-            max-width: 500px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
         }
         label {
-            display: block;
-            margin-bottom: 8px;
+            margin-top: 10px;
+            margin-bottom: 5px;
             font-weight: bold;
         }
-        input, select {
-            width: 100%;
+        input, select, button {
             padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
+            font-size: 16px;
             border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
         }
         button {
             background-color: #800000;
             color: white;
-            padding: 10px 20px;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
         }
         button:hover {
             background-color: #a52a2a;
         }
+        .error {
+            color: red;
+            margin-bottom: 15px;
+        }
+        .back-btn {
+            text-decoration: none;
+            background-color: #800000;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+        .back-btn:hover {
+            background-color: #a52a2a;
+        }
     </style>
 </head>
 <body>
-    <h2>Edit Alat Kalibrasi</h2>
-    <form method="POST">
-        <label for="name">Nama Alat</label>
-        <input type="text" name="name" id="name" value="<?php echo htmlspecialchars($tool['name']); ?>" required>
+    <div class="container">
+        <h1>Edit Alat Kalibrasi</h1>
+        <?php if ($error): ?>
+            <p class="error"><?php echo htmlspecialchars($error); ?></p>
+        <?php endif; ?>
+        <form method="POST">
+            <label for="tool_name">Nama Alat</label>
+            <input type="text" id="tool_name" name="tool_name" value="<?php echo htmlspecialchars($tool['tool_name']); ?>" required>
 
-        <label for="status">Status</label>
-        <select id="status" name="status">
-            <option value="Terkalibrasi">Terkalibrasi</option>
-            <option value="Butuh Kalibrasi">Butuh Kalibrasi</option>
-        </select>
-        
-        <label for="last_calibration">Kalibrasi Terakhir</label>
-        <input type="date" name="last_calibration" id="last_calibration" value="<?php echo htmlspecialchars($tool['last_calibration']); ?>" required>
+            <label for="calibration_status">Status Kalibrasi</label>
+            <select id="calibration_status" name="calibration_status" required>
+                <option value="Terkalibrasi" <?php echo $tool['calibration_status'] === 'Terkalibrasi' ? 'selected' : ''; ?>>Terkalibrasi</option>
+                <option value="Belum Terkalibrasi" <?php echo $tool['calibration_status'] === 'Belum Terkalibrasi' ? 'selected' : ''; ?>>Belum Terkalibrasi</option>
+            </select>
 
-        <button type="submit">Simpan Perubahan</button>
-    </form>
+            <label for="last_calibrated">Terakhir Dikalibrasi</label>
+            <input type="date" id="last_calibrated" name="last_calibrated" value="<?php echo htmlspecialchars($tool['last_calibrated']); ?>" required>
+
+            <button type="submit">Simpan Perubahan</button>
+        </form>
+        <a href="calibration.php" class="back-btn">Kembali</a>
+    </div>
 </body>
 </html>

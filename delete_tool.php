@@ -7,18 +7,26 @@ if (!isset($_SESSION['user_id'])) {
 
 include 'config.php';
 
-// Menghapus alat kalibrasi berdasarkan ID
-if (isset($_GET['delete_id'])) {
-    $delete_id = $_GET['delete_id'];
+// Periksa apakah parameter `id` ada
+if (!isset($_GET['id'])) {
+    header("Location: calibration.php");
+    exit();
+}
 
-    // Query untuk menghapus data alat kalibrasi berdasarkan ID
-    $sql_delete = "DELETE FROM calibration_tools WHERE id = '$delete_id'";
+$tool_id = $_GET['id'];
 
-    if ($conn->query($sql_delete) === TRUE) {
-        header("Location: calibration.php"); // Redirect setelah berhasil menghapus alat
-        exit();
-    } else {
-        echo "Error: " . $sql_delete . "<br>" . $conn->error;
-    }
+// Proses penghapusan data
+$sql = "DELETE FROM calibration_tools WHERE id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $tool_id);
+
+if ($stmt->execute()) {
+    // Jika berhasil, kembali ke halaman daftar alat
+    header("Location: calibration.php?message=success");
+    exit();
+} else {
+    // Jika gagal, kembali dengan pesan kesalahan
+    header("Location: calibration.php?message=error");
+    exit();
 }
 ?>
