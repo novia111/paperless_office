@@ -138,7 +138,7 @@ if ($result && $result->num_rows > 0) {
 </head>
 <body>
     <header>
-        <h1>Novia Kalibrasi</h1>
+        <h1>Laporan Kalibrasi</h1>
         <div class="dropdown">
             &#x22EE; <!-- Unicode untuk titik tiga -->
             <div class="dropdown-content">

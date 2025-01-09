@@ -131,7 +131,7 @@ $result_clients = $conn->query($sql_clients);
 </head>
 <body>
     <header>
-        <h1>Novia Kalibrasi</h1>
+        <h1>Daftar Klien</h1>
         <div class="dropdown">
             &#x22EE; <!-- Unicode untuk titik tiga -->
             <div class="dropdown-content">

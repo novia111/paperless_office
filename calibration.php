@@ -119,7 +119,7 @@ $result_tools = $conn->query($sql_tools);
 </head>
 <body>
     <header>
-        <h1>Novia Kalibrasi</h1>
+        <h1>Daftar Alat</h1>
         <div class="dropdown">
             &#x22EE; <!-- Unicode untuk titik tiga -->
             <div class="dropdown-content">
