@@ -218,6 +218,17 @@ if ($result_schedules && $result_schedules->num_rows > 0) {
 </head>
 <body>
     <h2>Jadwal Kalibrasi</h2>
+    <div class="dropdown">
+            &#x22EE;
+            <div class="dropdown-content">
+                <a href="dashboard.php">Dashboard</a>
+                <a href="calibration.php">Alat Kalibrasi</a>
+                <a href="schedule.php">Jadwal Kalibrasi</a>
+                <a href="clients.php">Klien</a>
+                <a href="reports.php">Laporan</a>
+                <a href="logout.php">Logout</a>
+            </div>
+        </div>
     <a href="add_schedule.php" class="add-button">Tambah Jadwal Baru</a>
     <table>
         <thead>
