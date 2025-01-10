@@ -13,7 +13,7 @@ $result_tools = $conn->query($sql_tools);
 $total_tools = ($result_tools && $result_tools->num_rows > 0) ? $result_tools->fetch_assoc()['total_tools'] : 0;
 
 // Mengambil data jadwal kalibrasi mendatang tanpa LIMIT
-$sql_schedules = "SELECT tool_name, DATE_FORMAT(schedule_date, '%d %M %Y') AS formatted_date FROM schedules WHERE schedule_date >= CURDATE() ORDER BY schedule_date ASC";
+$sql_schedules = "SELECT id, tool_name, client_name, DATE_FORMAT(schedule_date, '%d %M %Y') AS formatted_date, status FROM calibration_schedules ORDER BY schedule_date ASC";
 $result_schedules = $conn->query($sql_schedules);
 $schedules_list = [];
 

@@ -19,7 +19,7 @@ if (isset($_GET['id'])) {
     $schedule_id = $_GET['id'];
 
     // Mengambil data jadwal berdasarkan id
-    $stmt = $conn->prepare("SELECT id, tool_name, client_name, schedule_date, status FROM schedules WHERE id = ?");
+    $stmt = $conn->prepare("SELECT id, tool_name, client_name, schedule_date, status FROM calibration_schedules WHERE id = ?");
     $stmt->bind_param("i", $schedule_id);
     $stmt->execute();
     $stmt->bind_result($schedule_id, $tool_name, $client_name, $schedule_date, $status);
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status = $_POST['status'];
 
     // Update data jadwal
-    $stmt = $conn->prepare("UPDATE schedules SET tool_name = ?, client_name = ?, schedule_date = ?, status = ? WHERE id = ?");
+    $stmt = $conn->prepare("UPDATE calibration_schedules SET tool_name = ?, client_name = ?, schedule_date = ?, status = ? WHERE id = ?");
     $stmt->bind_param("ssssi", $tool_name, $client_name, $schedule_date, $status, $schedule_id);
     $stmt->execute();
     $stmt->close();
@@ -113,8 +113,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="input-field">
                 <label for="status">Status</label>
                 <select id="status" name="status" required>
-                <option value="Scheduled">Scheduled</option>
-                <option value="Completed">Completed</option>
+                    <option value="Scheduled" <?php echo ($status == 'Scheduled') ? 'selected' : ''; ?>>Scheduled</option>
+                    <option value="Completed" <?php echo ($status == 'Completed') ? 'selected' : ''; ?>>Completed</option>
                 </select>
             </div>
             <button type="submit" class="submit-button">Simpan Perubahan</button>

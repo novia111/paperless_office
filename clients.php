@@ -127,7 +127,42 @@ $result_clients = $conn->query($sql_clients);
         .add-btn:hover {
             background-color: #a52a2a;
         }
+
+        .search-form {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .search-form input {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 300px;
+        }
     </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Fungsi untuk mencari data secara dinamis
+        function searchClients() {
+            var query = $('#search').val(); // Ambil kata kunci dari input
+            $.ajax({
+                url: 'search_clients.php', // URL untuk mencari data
+                type: 'GET',
+                data: { search: query }, // Kirimkan query pencarian ke server
+                success: function(data) {
+                    $('#client-list').html(data); // Tampilkan hasil pencarian di dalam tabel
+                }
+            });
+        }
+
+        // Panggil fungsi searchClients ketika pengguna mengetik
+        $(document).ready(function() {
+            $('#search').on('input', function() {
+                searchClients();
+            });
+        });
+    </script>
 </head>
 <body>
     <header>
@@ -145,6 +180,11 @@ $result_clients = $conn->query($sql_clients);
         </div>
     </header>
 
+    <!-- Form Pencarian -->
+    <div class="search-form">
+        <input type="text" id="search" placeholder="Cari klien...">
+    </div>
+
     <a href="add_client.php" class="add-btn">Tambah Klien</a>
 
     <table>
@@ -158,7 +198,7 @@ $result_clients = $conn->query($sql_clients);
                 <th>Aksi</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="client-list">
             <?php if ($result_clients && $result_clients->num_rows > 0): ?>
                 <?php $no = 1; while ($row = $result_clients->fetch_assoc()): ?>
                     <tr>

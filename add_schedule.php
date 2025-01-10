@@ -7,21 +7,33 @@ if (!isset($_SESSION['user_id'])) {
 
 include 'config.php';
 
-// Proses Tambah Jadwal Baru
+if (!$conn) {
+    die("Koneksi database gagal: " . mysqli_connect_error());
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tool_name = $_POST['tool_name'];
     $client_name = $_POST['client_name'];
     $schedule_date = $_POST['schedule_date'];
     $status = $_POST['status'];
 
-    $stmt = $conn->prepare("INSERT INTO schedules (tool_name, client_name, schedule_date, status) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $tool_name, $client_name, $schedule_date, $status);
-    $stmt->execute();
-    $stmt->close();
+    // Ganti 'schedules' dengan nama tabel baru, misalnya 'calibration_schedule'
+    $stmt = $conn->prepare("INSERT INTO calibration_schedules (tool_name, client_name, schedule_date, status) VALUES (?, ?, ?, ?)");
+    if (!$stmt) {
+        die("Kesalahan pada query: " . $conn->error);
+    }
 
+    $stmt->bind_param("ssss", $tool_name, $client_name, $schedule_date, $status);
+
+    if (!$stmt->execute()) {
+        die("Gagal menyimpan data: " . $stmt->error);
+    }
+
+    $stmt->close();
     header("Location: schedule.php");
     exit();
 }
+
 ?>
 
 <!DOCTYPE html>

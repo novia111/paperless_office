@@ -19,7 +19,7 @@ $result_tools = $conn->query($sql_tools);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alat Kalibrasi</title>
     <style>
-        body {
+         body {
             font-family: Arial, sans-serif;
             background-color: #f7f3f2;
             margin: 0;
@@ -75,20 +75,37 @@ $result_tools = $conn->query($sql_tools);
             padding: 20px;
             flex: 1;
         }
+
+        /* Form Pencarian */
+        .search-form {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .search-form input {
+            padding: 10px;
+            width: 300px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px auto;
             text-align: left;
         }
+
         th, td {
             border: 1px solid #ddd;
             padding: 10px;
         }
+
         th {
             background-color: #800000;
             color: white;
         }
+
         .action-btn {
             padding: 5px 10px;
             text-decoration: none;
@@ -97,9 +114,11 @@ $result_tools = $conn->query($sql_tools);
             border-radius: 5px;
             margin-right: 5px;
         }
+
         .action-btn:hover {
             background-color: #a52a2a;
         }
+
         .add-btn {
             display: inline-block;
             width: fit-content;
@@ -116,12 +135,34 @@ $result_tools = $conn->query($sql_tools);
             background-color: #a52a2a;
         }
     </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery -->
+    <script>
+        // Fungsi untuk mencari data secara dinamis
+        function searchTools() {
+            var query = $('#search').val(); // Ambil kata kunci dari input
+            $.ajax({
+                url: 'search_tools.php', // URL untuk mencari data
+                type: 'GET',
+                data: { search: query }, // Kirimkan query pencarian ke server
+                success: function(data) {
+                    $('#tool-list').html(data); // Tampilkan hasil pencarian di dalam tabel
+                }
+            });
+        }
+
+        // Panggil fungsi searchTools ketika pengguna mengetik
+        $(document).ready(function() {
+            $('#search').on('input', function() {
+                searchTools();
+            });
+        });
+    </script>
 </head>
 <body>
     <header>
         <h1>Daftar Alat</h1>
         <div class="dropdown">
-            &#x22EE; <!-- Unicode untuk titik tiga -->
+            &#x22EE;
             <div class="dropdown-content">
                 <a href="dashboard.php">Dashboard</a>
                 <a href="calibration.php">Alat Kalibrasi</a>
@@ -132,6 +173,11 @@ $result_tools = $conn->query($sql_tools);
             </div>
         </div>
     </header>
+
+    <!-- Form Pencarian -->
+    <div class="search-form">
+        <input type="text" id="search" placeholder="Cari alat kalibrasi...">
+    </div>
 
     <a href="add_tool.php" class="add-btn">Tambah Alat Kalibrasi</a>
 
@@ -145,7 +191,7 @@ $result_tools = $conn->query($sql_tools);
                 <th>Aksi</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="tool-list">
             <?php if ($result_tools && $result_tools->num_rows > 0): ?>
                 <?php $no = 1; while ($row = $result_tools->fetch_assoc()): ?>
                     <tr>
